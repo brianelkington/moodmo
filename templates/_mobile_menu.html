@@ -28,10 +28,10 @@
           <a href="{% url 'mood_list' %}" @click="menuOpen = false">
             Moods
           </a>
-          <a href="{% url 'mood_search' %}">
+          <a href="{% url 'mood_search' %}" @click="menuOpen = false">
             Search
           </a>
-          <a href="{% url 'statistics' %}">
+          <a href="{% url 'statistics' %}" @click="menuOpen = false">
             Statistics
           </a>
           <a href="{% url 'settings' %}">

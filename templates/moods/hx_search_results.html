@@ -1,0 +1,11 @@
+{% if moods %}
+  {% include "moods/hx_mood_list.html" %}
+{% else %}
+  <li class="py-16 px-3 text-center text-xl text-black">
+    {% if request.GET.search_term or request.GET.mood or request.GET.start_date or request.GET.end_date %}
+      No moods matched your search.
+    {% else %}
+      You don't have any mood entries yet.
+    {% endif %}
+  </li>
+{% endif %}

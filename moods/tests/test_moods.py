@@ -257,6 +257,106 @@ class DeleteViewTest(TestCase):
         self.assertRedirects(response, reverse("mood_list"))
 
 
+class SearchViewTest(TestCase):
+    def setUp(self):
+        self.credentials, self.user = create_fake_user()
+        self.url = reverse("mood_search")
+        self.results_url = reverse("mood_search_results")
+
+    def test_authenticated_user_can_access_view(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "moods/mood_search.html")
+        self.assertNotContains(response, "still in construction")
+
+    def test_not_authenticated_user_cannot_access_view(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_search_results_without_htmx_redirects(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(self.results_url)
+
+        self.assertRedirects(response, self.url)
+
+    def test_search_results_filter_by_note(self):
+        self.client.login(**self.credentials)
+        matching = Mood.objects.create(
+            user=self.user,
+            mood=1,
+            note_title="Pizza night",
+            date=timezone.now().date(),
+            time=timezone.now().time(),
+        )
+        other = Mood.objects.create(
+            user=self.user,
+            mood=1,
+            note_title="Went running",
+            date=timezone.now().date(),
+            time=timezone.now().time(),
+        )
+
+        response = self.client.get(
+            self.results_url,
+            {"search_term": "Pizza"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, matching.note_title)
+        self.assertNotContains(response, other.note_title)
+
+    def test_search_results_filter_by_mood(self):
+        self.client.login(**self.credentials)
+        happy = Mood.objects.create(
+            user=self.user,
+            mood=2,
+            note_title="Great day",
+            date=timezone.now().date(),
+            time=timezone.now().time(),
+        )
+        sad = Mood.objects.create(
+            user=self.user,
+            mood=-2,
+            note_title="Rough day",
+            date=timezone.now().date(),
+            time=timezone.now().time(),
+        )
+
+        response = self.client.get(
+            self.results_url,
+            {"mood": "2"},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(response, happy.note_title)
+        self.assertNotContains(response, sad.note_title)
+
+    def test_user_cannot_see_other_users_moods(self):
+        other = create_fake_mood(self.user)
+        other_credentials, _ = create_fake_user()
+        self.client.login(**other_credentials)
+
+        response = self.client.get(
+            self.results_url,
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertNotContains(response, other.note_title)
+
+    def test_search_results_empty_state(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(
+            self.results_url,
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertContains(response, "You don't have any mood entries yet.")
+
+
 class ImportViewTest(TestCase):
     def setUp(self):
         self.credentials, self.user = create_fake_user()

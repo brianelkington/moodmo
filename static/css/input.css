@@ -23,6 +23,7 @@
 
   form input[type="text"],
   form input[type="email"],
+  form input[type="search"],
   form input[type="date"],
   form input[type="time"],
   form input[type="number"],
@@ -40,5 +41,14 @@
 
   .form__link {
     @apply text-center text-lg text-primary-700 underline hover:text-primary-500 transition-colors;
+  }
+
+  .htmx-indicator {
+    display: none;
+  }
+
+  .htmx-request.htmx-indicator,
+  .htmx-request .htmx-indicator {
+    display: flex;
   }
 }

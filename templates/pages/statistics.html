@@ -5,14 +5,112 @@
     {% include "_primary_nav.html" %}
   </header>
 
-  <main class="h-screen flex items-center bg-naples-500 justify-center">
-    <div class="max-w-md w-full mx-auto py-9 px-6 rounded-3xl">
-      <h2 class="w-full text-4xl font-bold text-black text-center mb-9">
-        Oops!
-      </h2>
-      <p class="w-full text-lg text-center text-black">
-        We're sorry but this page is still in construction!
+  <main class="flex flex-col mb-44 w-full max-w-screen-md px-3 sm:px-6 md:px-0 mx-auto">
+    <div class="mt-32 mb-16 sm:mt-36 flex flex-col">
+      <h1 class="text-5xl sm:text-6xl font-bold tracking-tight">
+        Statistics
+      </h1>
+      <p class="mt-3 text-lg text-black">
+        Patterns in how you've been feeling.
       </p>
     </div>
+
+    {% if total %}
+      <section class="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-12">
+        <article class="border-2 border-black rounded-3xl p-6">
+          <p class="text-sm font-bold uppercase">Entries</p>
+          <p class="text-4xl font-bold mt-2">{{ total }}</p>
+        </article>
+        <article class="border-2 border-black rounded-3xl p-6">
+          <p class="text-sm font-bold uppercase">Days tracked</p>
+          <p class="text-4xl font-bold mt-2">{{ days_tracked }}</p>
+        </article>
+        <article class="border-2 border-black rounded-3xl p-6">
+          <p class="text-sm font-bold uppercase">Current streak</p>
+          <p class="text-4xl font-bold mt-2">{{ current_streak }}</p>
+        </article>
+        <article class="border-2 border-black rounded-3xl p-6">
+          <p class="text-sm font-bold uppercase">Longest streak</p>
+          <p class="text-4xl font-bold mt-2">{{ longest_streak }}</p>
+        </article>
+      </section>
+
+      <section class="border-b-2 border-b-black pb-12 mb-12">
+        <div class="flex items-center gap-x-4 mb-6">
+          <div class="{{ average_mood.color }} p-3 flex items-center justify-center rounded-full">
+            <i class="fa-regular {{ average_mood.icon }} text-4xl"></i>
+          </div>
+          <div>
+            <p class="text-sm font-bold uppercase">Average mood</p>
+            <p class="text-2xl font-bold">{{ average_mood.label }} <span class="text-lg font-normal">({{ average }})</span></p>
+          </div>
+        </div>
+        <p class="text-lg">
+          {{ this_week }} {{ this_week|pluralize:"entry,entries" }} in the last 7 days,
+          {{ this_month }} this month.
+        </p>
+      </section>
+
+      <section class="border-b-2 border-b-black pb-12 mb-12">
+        <h2 class="text-3xl font-bold mb-6">Last 30 days</h2>
+        <div class="h-32 flex items-end gap-0.5">
+          {% for day in recent_days %}
+            <div
+              class="flex-1 rounded-t {% if day.count %}bg-primary-500{% else %}bg-primary-100{% endif %}"
+              style="height: {% if day.bar_height %}{{ day.bar_height }}%{% else %}6%{% endif %}"
+              title="{{ day.date }}{% if day.count %}: {{ day.count }} {{ day.count|pluralize:"entry,entries" }}, avg {{ day.avg }}{% else %}: no entries{% endif %}">
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="border-b-2 border-b-black pb-12 mb-12">
+        <h2 class="text-3xl font-bold mb-6">Mood breakdown</h2>
+        <ul class="flex flex-col gap-y-4">
+          {% for item in distribution %}
+            <li class="flex items-center gap-x-3">
+              <div class="{{ item.color }} p-2 flex items-center justify-center rounded-full">
+                <i class="fa-regular {{ item.icon }} text-2xl"></i>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="font-bold">{{ item.label }}</p>
+                  <p>{{ item.count }} · {{ item.percent }}%</p>
+                </div>
+                <div class="w-full h-3 bg-primary-100 rounded-full">
+                  <div class="h-3 {{ item.color }} rounded-full" style="width: {{ item.percent }}%"></div>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-3xl font-bold mb-6">Top activities</h2>
+        {% if top_activities %}
+          <ul class="flex flex-wrap gap-3">
+            {% for activity in top_activities %}
+              <li class="py-3 px-6 border-2 border-black rounded-3xl font-bold">
+                #{{ activity.name }}
+                <span class="text-primary-500">{{ activity.uses }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-lg">No activities tagged yet.</p>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="py-16 text-center">
+        <p class="text-xl mb-6">
+          No moods to summarize yet. Add an entry to start seeing patterns.
+        </p>
+        <a href="{% url 'mood_create' %}"
+           class="inline-flex items-center justify-center uppercase text-lg font-bold bg-primary-500 py-4 px-12 rounded-full hover:bg-black hover:text-white transition-colors">
+          New mood
+        </a>
+      </section>
+    {% endif %}
   </main>
 {% endblock %}

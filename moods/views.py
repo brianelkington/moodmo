@@ -1,11 +1,12 @@
 import csv
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.conf import settings
+from django.contrib.postgres.search import SearchQuery
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
-from django.utils.timezone import make_aware
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -20,6 +21,19 @@ from django.views.generic import (
 from utils.mixins import UserIsOwnerMixin, SetUserMixin
 from moods.forms import ActivityForm, MoodForm, UploadFileForm, ExportOptionsForm
 from moods.models import Activity, Mood
+
+
+def parse_query_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
+def pagination_querystring(request):
+    query = request.GET.copy()
+    query.pop("page", None)
+    return query.urlencode()
 
 
 class ActivityListView(LoginRequiredMixin, ListView):
@@ -78,6 +92,11 @@ class MoodListView(LoginRequiredMixin, ListView):
             .only("mood", "note_title", "date", "time", "activities")
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pagination_query"] = pagination_querystring(self.request)
+        return context
+
 
 class MoodSearchView(LoginRequiredMixin, TemplateView):
     template_name = "moods/mood_search.html"
@@ -85,7 +104,7 @@ class MoodSearchView(LoginRequiredMixin, TemplateView):
 
 class MoodSearchResultsView(LoginRequiredMixin, ListView):
     model = Mood
-    template_name = "moods/hx_mood_list.html"
+    template_name = "moods/hx_search_results.html"
     context_object_name = "moods"
     paginate_by = 30
 
@@ -96,26 +115,39 @@ class MoodSearchResultsView(LoginRequiredMixin, ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        mood = self.request.GET.get("mood", "")
-        search_term = self.request.GET.get("search_term", "")
-        start_date = self.request.GET.get("start_date", "")
-        end_date = self.request.GET.get("end_date", "")
+        mood = self.request.GET.get("mood", "").strip()
+        search_term = self.request.GET.get("search_term", "").strip()
+        start_date = parse_query_date(self.request.GET.get("start_date", ""))
+        end_date = parse_query_date(self.request.GET.get("end_date", ""))
 
         moods = Mood.objects.filter(user=self.request.user)
 
         if mood:
-            moods = moods.filter(mood=mood)
-        if search_term:
-            moods = moods.filter(search_vector=search_term)
-        if start_date:
-            start_date = make_aware(datetime.strptime(start_date, "%Y-%m-%d"))
-            moods = moods.filter(date__gte=start_date - timedelta(days=1))
-        if end_date:
-            end_date = make_aware(datetime.strptime(end_date, "%Y-%m-%d"))
-            moods = moods.filter(date__lte=end_date + timedelta(days=1))
+            try:
+                moods = moods.filter(mood=int(mood))
+            except ValueError:
+                pass
 
-        moods = moods.prefetch_related("activities")
-        return moods
+        if search_term:
+            search_filter = (
+                Q(note_title__icontains=search_term)
+                | Q(note__icontains=search_term)
+                | Q(activities__name__icontains=search_term)
+                | Q(search_vector=SearchQuery(search_term))
+            )
+            moods = moods.filter(search_filter).distinct()
+
+        if start_date:
+            moods = moods.filter(date__gte=start_date)
+        if end_date:
+            moods = moods.filter(date__lte=end_date)
+
+        return moods.prefetch_related("activities")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pagination_query"] = pagination_querystring(self.request)
+        return context
 
 
 class MoodCreateView(LoginRequiredMixin, SetUserMixin, CreateView):

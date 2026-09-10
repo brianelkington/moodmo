@@ -1,18 +1,111 @@
 {% extends "_base.html" %}
+{% load static %}
 {% block title %}MoodMo - Search{% endblock %}
 {% block content %}
   <header>
     {% include "_primary_nav.html" %}
   </header>
 
-  <main class="h-screen flex items-center bg-naples-500 justify-center">
-    <div class="max-w-md w-full mx-auto py-9 px-6 rounded-3xl">
-      <h2 class="w-full text-4xl font-bold text-black text-center mb-9">
-        Oops!
-      </h2>
-      <p class="w-full text-lg text-center text-black">
-        We're sorry but this page is still in construction!
+  <main class="w-full max-w-screen-md px-3 mb-24 sm:px-6 md:px-0 mx-auto"
+        x-data="{scrolled: false}" x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 100 })">
+    <div class="mt-32 mb-8 sm:mt-36">
+      <h1 class="text-5xl sm:text-6xl font-bold tracking-tight">
+        Search
+      </h1>
+      <p class="mt-3 text-lg text-black">
+        Find past moods by note, activity, feeling, or date.
       </p>
     </div>
+
+    <form
+      class="form mb-12"
+      hx-get="{% url 'mood_search_results' %}"
+      hx-target="#moodList"
+      hx-indicator="#loading"
+      hx-swap="innerHTML"
+      hx-trigger="load, submit, keyup changed delay:400ms from:input[name='search_term'], change from:input[name='mood'], change from:input[type='date']"
+    >
+      <fieldset class="mb-6">
+        <input type="search" name="search_term" placeholder="Search notes and activities" autocomplete="off">
+      </fieldset>
+
+      <fieldset class="mb-6">
+        <ul class="items-center justify-evenly flex gap-x-1 sm:gap-x-3">
+          <li>
+            <input type="radio" id="mood-any" name="mood" value="" class="hidden peer" checked>
+            <label for="mood-any"
+                   class="flex items-center justify-center min-w-[3.25rem] px-3 py-2 rounded-full cursor-pointer border-2 border-black text-sm font-bold uppercase hover:bg-primary-500 peer-checked:bg-primary-500 transition-colors">
+              Any
+            </label>
+          </li>
+          <li>
+            <input type="radio" id="mood--2" name="mood" value="-2" class="hidden peer">
+            <label for="mood--2"
+                   class="flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:bg-cinnabar-500 peer-checked:bg-cinnabar-500 transition-colors">
+              <i class="w-full text-4xl sm:text-5xl fa-regular fa-face-sad-tear"></i>
+            </label>
+          </li>
+          <li>
+            <input type="radio" id="mood--1" name="mood" value="-1" class="hidden peer">
+            <label for="mood--1"
+                   class="flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:bg-navajo-500 peer-checked:bg-navajo-500 transition-colors">
+              <i class="w-full text-4xl sm:text-5xl fa-regular fa-face-frown"></i>
+            </label>
+          </li>
+          <li>
+            <input type="radio" id="mood-0" name="mood" value="0" class="hidden peer">
+            <label for="mood-0"
+                   class="flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:bg-primary-500 peer-checked:bg-primary-500 transition-colors">
+              <i class="w-full text-4xl sm:text-5xl fa-regular fa-face-meh"></i>
+            </label>
+          </li>
+          <li>
+            <input type="radio" id="mood-1" name="mood" value="1" class="hidden peer">
+            <label for="mood-1"
+                   class="flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:bg-zomp-500 peer-checked:bg-zomp-500 transition-colors">
+              <i class="w-full text-4xl sm:text-5xl fa-regular fa-face-smile"></i>
+            </label>
+          </li>
+          <li>
+            <input type="radio" id="mood-2" name="mood" value="2" class="hidden peer">
+            <label for="mood-2"
+                   class="flex items-center justify-center p-1.5 rounded-full cursor-pointer hover:bg-naples-500 peer-checked:bg-naples-500 transition-colors">
+              <i class="w-full text-4xl sm:text-5xl fa-regular fa-face-grin-stars"></i>
+            </label>
+          </li>
+        </ul>
+      </fieldset>
+
+      <fieldset class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input type="date" name="start_date" aria-label="Start date">
+        <input type="date" name="end_date" aria-label="End date">
+      </fieldset>
+    </form>
+
+    <ul id="moodList" class="flex flex-col"></ul>
+
+    <div id="loading" class="htmx-indicator flex flex-col gap-y-3">
+      {% for i in "012"|make_list %}
+        <li class="flex items-center gap-x-2 mb-1.5 py-6 px-3 bg-white last-of-type:border-none border-b-2 border-b-primary-300">
+          <div class="w-20 h-20 bg-primary-300 rounded-full animate-pulse">&nbsp;</div>
+          <div class="flex flex-col gap-y-1 w-full">
+            <div class="flex gap-x-1.5">
+              <span class="bg-primary-300 px-3 py-1 w-16 rounded-xl animate-pulse">&nbsp;</span>
+              <span class="bg-primary-300 px-3 py-1 w-24 rounded-xl animate-pulse">&nbsp;</span>
+            </div>
+            <p class="bg-primary-300 w-full rounded-xl animate-pulse">&nbsp;</p>
+          </div>
+        </li>
+      {% endfor %}
+    </div>
+
+    <button
+      x-show="scrolled" @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+      class="fixed bottom-5 left-5 lg:left-20 bg-white border-2 border-black rounded-full w-12 h-12 hover:bg-black hover:text-white transition-colors"
+      role="link">
+      <i class="fa-solid fa-arrow-up m-3 text-lg"></i>
+    </button>
   </main>
+
+  <script src="{% static 'js/custom.js' %}" defer></script>
 {% endblock %}
