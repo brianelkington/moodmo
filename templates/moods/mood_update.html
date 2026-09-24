@@ -93,7 +93,7 @@
                         <div class="flex items-center gap-x-1.5 justify-end mb-1.5">
                             <span class="text-black text-lg" x-show="!note">Add a</span>
                             <span class="text-black text-lg" x-show="note">Edit your</span>
-                            <button @click.prevent="noteModal=true"
+                            <button @click.prevent="if (!note && noteTitle) { note = noteTitle; noteTitle = noteTitle.slice(0, 255); } noteModal = true"
                                     class="select-none cursor-pointer text-black bg-primary-500 border border-primary-500 hover:bg-black hover:text-white hover:border-black font-bold rounded-full text-base px-3 py-1.5 text-center">
                                 full note
                             </button>

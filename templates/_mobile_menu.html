@@ -25,6 +25,9 @@
 
       <div class="flex flex-col items-center justify-around gap-y-6 pb-9 font-bold uppercase">
         {% if user.is_authenticated %}
+          <a href="{% url 'mood_create' %}" @click="menuOpen = false">
+            New mood
+          </a>
           <a href="{% url 'mood_list' %}" @click="menuOpen = false">
             Moods
           </a>

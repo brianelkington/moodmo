@@ -24,14 +24,11 @@
 
     <div class="hidden lg:flex items-center gap-x-6 p-3 font-bold uppercase">
       {% if user.is_authenticated %}
-        <button
-          class="text-xl text-black bg-periwinkle-500 py-3 px-6 rounded-full hover:bg-black hover:text-white transition-colors"
-          hx-get="{% url 'mood_create' %}"
-          hx-trigger="click"
-          hx-target="body"
-          role="link">
+        <a
+          href="{% url 'mood_create' %}"
+          class="text-xl text-black bg-periwinkle-500 py-3 px-6 rounded-full hover:bg-black hover:text-white transition-colors">
           New mood
-        </button>
+        </a>
       {% else %}
         <a href="{% url 'account_login' %}" class="hover:text-primary-500 transition-colors"> Log in </a>
         <a href="{% url 'account_signup' %}"

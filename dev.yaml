@@ -1,6 +1,7 @@
 volumes:
   moodmo_dev_postgres_data: {}
   moodmo_dev_postgres_data_backups: {}
+  moodmo_dev_node_modules: {}
 
 services:
   django:
@@ -9,12 +10,14 @@ services:
       dockerfile: ./compose/dev/Dockerfile
     image: moodmo_dev_django
     container_name: moodmo_dev_django
+    restart: unless-stopped
     depends_on:
       - postgres
       - mailpit
       - memcached
     volumes:
       - .:/app
+      - moodmo_dev_node_modules:/app/node_modules
     env_file:
       - ./.env
     ports:
@@ -23,6 +26,7 @@ services:
   postgres:
     image: postgres:16.2-alpine3.19
     container_name: moodmo_dev_postgres
+    restart: unless-stopped
     volumes:
       - moodmo_dev_postgres_data:/var/lib/postgresql/data
       - moodmo_dev_postgres_data_backups:/backups
@@ -32,11 +36,13 @@ services:
   memcached:
     image: memcached:1.6.26-alpine3.19
     container_name: moodmo_dev_memcached
+    restart: unless-stopped
     depends_on:
       - postgres
 
   mailpit:
     image: axllent/mailpit:v1.15
     container_name: moodmo_dev_mailpit
+    restart: unless-stopped
     ports:
       - "8025:8025"

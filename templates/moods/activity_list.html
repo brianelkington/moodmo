@@ -8,13 +8,13 @@
   <main class="flex flex-col mb-44 max-w-screen-md mx-3 sm:mx-6 lg:mx-auto">
     <ul class="mt-44 flex flex-wrap items-center justify-center gap-3 text-base sm:text-lg text-black">
       {% for activity in activities %}
-        <li
-          class="flex items-center justify-between py-3 px-6 select-none bg-white border-2 border-black rounded-3xl hover:border-primary-500 hover:bg-primary-500 transition-colors cursor-pointer"
-          hx-get="{% url 'activity_edit' activity.sqid %}"
-          hx-trigger="click"
-          hx-target="body"
-        >
-          <p>{{activity.name}}</p>
+        <li>
+          <a
+            href="{% url 'activity_edit' activity.sqid %}"
+            class="flex items-center justify-between py-3 px-6 select-none bg-white border-2 border-black rounded-3xl hover:border-primary-500 hover:bg-primary-500 transition-colors cursor-pointer"
+          >
+            <p>{{activity.name}}</p>
+          </a>
         </li>
 
       {% endfor %}

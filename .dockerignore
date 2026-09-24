@@ -14,3 +14,4 @@ poetry.lock
 prod.yaml
 pyproject.toml
 tailwindcss
+node_modules

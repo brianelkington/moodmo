@@ -73,6 +73,7 @@ if DEBUG:
     INSTALLED_APPS += [
         "debug_toolbar",
         "django_browser_reload",
+        "django_watchfiles",
         "silk",
     ]
 
@@ -175,6 +176,7 @@ CACHE_TIMEOUT_SECONDS = env.int("CACHE_TIMEOUT_SECONDS", 60 * 15)
 
 DEBUG_TOOLBAR_CONFIG = {
     "ROOT_TAG_EXTRA_ATTRS": "hx-preserve",
+    "SHOW_COLLAPSED": True,
 }
 
 

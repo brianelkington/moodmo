@@ -86,6 +86,37 @@ class MoodFormTest(TestCase):
         )
         self.assertFalse(form.is_valid())
 
+    def test_mood_form_defaults_missing_time_to_now(self):
+        before = timezone.localtime().time().replace(microsecond=0)
+        data = {
+            "mood": 1,
+            "date": timezone.now().date(),
+        }
+        form = MoodForm(
+            user=self.user,
+            data=data,
+        )
+
+        self.assertTrue(form.is_valid())
+        after = timezone.localtime().time().replace(microsecond=0)
+        saved_time = form.cleaned_data["time"].replace(microsecond=0)
+        self.assertGreaterEqual(saved_time, before)
+        self.assertLessEqual(saved_time, after)
+
+    def test_mood_form_defaults_empty_time_string_to_now(self):
+        data = {
+            "mood": 1,
+            "date": timezone.now().date(),
+            "time": "",
+        }
+        form = MoodForm(
+            user=self.user,
+            data=data,
+        )
+
+        self.assertTrue(form.is_valid())
+        self.assertIsNotNone(form.cleaned_data["time"])
+
 
 class ListViewTest(TestCase):
     def setUp(self):
@@ -103,6 +134,14 @@ class ListViewTest(TestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 302)
+
+    def test_mood_list_links_to_create_page(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(self.url)
+
+        create_url = reverse("mood_create")
+        self.assertContains(response, f'href="{create_url}"')
+        self.assertNotContains(response, f'hx-get="{create_url}"')
 
     def test_authenticated_user_can_see_own_moods(self):
         self.client.login(**self.credentials)
@@ -152,6 +191,56 @@ class CreateViewTest(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Mood.objects.filter(mood=1, user=self.user).exists())
+
+    def test_create_mood_without_time_defaults_to_now(self):
+        self.client.login(**self.credentials)
+        mood_data = {
+            "mood": 1,
+            "date": "2024-04-04",
+            "time": "",
+        }
+
+        response = self.client.post(self.url, data=mood_data)
+
+        self.assertEqual(response.status_code, 302)
+        mood = Mood.objects.get(mood=1, user=self.user)
+        self.assertIsNotNone(mood.time)
+
+    def test_create_template_uses_24h_time_for_input(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "toTimeString().slice(0, 5)")
+        self.assertNotContains(
+            response,
+            "toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})",
+        )
+
+    def test_long_quick_note_is_saved_to_note_field(self):
+        self.client.login(**self.credentials)
+        long_entry = "A" * 300
+        mood_data = {
+            "mood": 1,
+            "note_title": long_entry,
+            "date": "2024-04-04",
+            "time": "12:00:00",
+        }
+
+        response = self.client.post(self.url, data=mood_data)
+
+        self.assertEqual(response.status_code, 302)
+        mood = Mood.objects.get(user=self.user)
+        self.assertEqual(mood.note, long_entry)
+        self.assertEqual(mood.note_title, long_entry[:255])
+
+    def test_create_template_promotes_quick_note_into_full_note(self):
+        self.client.login(**self.credentials)
+        response = self.client.get(self.url)
+
+        self.assertContains(
+            response,
+            "if (!note && noteTitle) { note = noteTitle; noteTitle = noteTitle.slice(0, 255); }",
+        )
 
 
 class UpdateViewTest(TestCase):

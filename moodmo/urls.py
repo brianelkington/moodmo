@@ -6,6 +6,7 @@ urlpatterns = [
     path(settings.DJANGO_ADMIN_URL, admin.site.urls),
     path("accounts/", include("allauth.urls")),
     path("settings/", include("accounts.urls")),
+    path("api/v1/", include("moods.api_urls")),
     path("moods/", include("moods.urls")),
     path("", include("pages.urls")),
 ]

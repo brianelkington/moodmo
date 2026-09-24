@@ -1,15 +1,15 @@
 {% for mood in moods %}
   <li
-    class="relative last-of-type:border-none border-b-2 border-b-black flex items-center gap-x-3 py-6 px-1.5 bg-white text-black select-none cursor-pointer"
-    role=""
+    class="relative last-of-type:border-none border-b-2 border-b-black bg-white text-black select-none"
     x-data="{
             emoji: moodToIcon[{{ mood.mood }}],
             color: moodToColor[{{ mood.mood }}],
             }"
-    hx-get="{% url 'mood_edit' mood.sqid %}"
-    hx-trigger="click"
-    hx-target="body"
   >
+    <a
+      href="{% url 'mood_edit' mood.sqid %}"
+      class="flex items-center gap-x-3 py-6 px-1.5 cursor-pointer"
+    >
 
     <div :class="color" class="p-3 flex items-center justify-center rounded-full">
       <i :class="emoji" class="text-4xl sm:text-6xl"></i>
@@ -39,6 +39,7 @@
         <p class="text-lg text-truncate line-clamp-2">{{mood.note_title}}</p>
       {% endif %}
     </div>
+    </a>
   </li>
 {% endfor %}
 
