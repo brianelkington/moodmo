@@ -17,7 +17,6 @@
         <main class="mt-12 md:mt-24 bg-white flex items-center justify-center"
               x-data="{
                       currentDate: new Date().toISOString().slice(0, 10),
-                      // HH:MM for <input type="time">; toLocaleTimeString can be invalid (e.g. 12h + AM/PM).
                       currentTime: new Date().toTimeString().slice(0, 5),
                       noteTitle: '',
                       note: '',
